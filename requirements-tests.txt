@@ -7,4 +7,5 @@ google-cloud-storage>=0.22.0
 qingstor-sdk
 mock
 paramiko
+
 pytest-cov>=2.2.1
