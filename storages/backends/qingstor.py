@@ -5,7 +5,7 @@ import os
 import posixpath
 from datetime import datetime
 
-import six
+from django.utils import six
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured, SuspiciousOperation
 from django.core.files.base import File
