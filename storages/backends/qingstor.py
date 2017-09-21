@@ -88,7 +88,7 @@ def get_qingstor_config(name, default=None):
 QINGSTOR_ACCESS_KEY_ID = get_qingstor_config('QINGSTOR_ACCESS_KEY_ID')
 QINGSTOR_SECRET_ACCESS_KEY = get_qingstor_config('QINGSTOR_SECRET_ACCESS_KEY')
 QINGSTOR_BUCKET_NAME = get_qingstor_config('QINGSTOR_BUCKET_NAME')
-QINGSTOR_BUCKET_ZONE = get_qingstor_config('QINGSTOR_BUCEKT_ZONE')
+QINGSTOR_BUCKET_ZONE = get_qingstor_config('QINGSTOR_BUCKET_ZONE')
 QINGSTOR_SECURE_URL = get_qingstor_config('QINGSTOR_SECURE_URL', 'True')
 
 
