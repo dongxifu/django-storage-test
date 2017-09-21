@@ -31,3 +31,8 @@ SECRET_KEY = 'hailthesunshine'
 
 USE_TZ = True
 TIME_ZONE = 'America/Chicago'
+
+QINGSTOR_ACCESS_KEY_ID = test
+QINGSTOR_SECRET_ACCESS_KEY = test
+QINGSTOR_BUCKET_NAME = test
+QINGSTOR_BUCKET_ZONE = test

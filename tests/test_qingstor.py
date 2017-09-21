@@ -2,7 +2,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
-import os
 import unittest
 import uuid
 from datetime import datetime
@@ -26,10 +25,6 @@ USING_TRAVIS = os.environ.get('USING_TRAVIS', None) is None
 
 UNIQUE_PATH = str(uuid.uuid4())
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
-os.environ.setdefault("QINGSTOR_ACCESS_KEY_ID", "test")
-os.environ.setdefault("QINGSTOR_BUCKET_NAME", "test")
-os.environ.setdefault("QINGSTOR_BUCEKT_ZONE", "test")
 
 class QingStorageTest(unittest.TestCase):
     def setUp(self):
