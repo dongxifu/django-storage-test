@@ -79,33 +79,24 @@ class QingStorageTest(unittest.TestCase):
             assert self.storage.exists(REMOTE_PATH) is False
 
     def test_read_file(self):
-        ASSET_FILE_NAMES = ['Read.txt', '读.txt']
+        REMOTE_PATH = "Read.txt"
 
-        for assert_file_name in ASSET_FILE_NAMES:
-            REMOTE_PATH = join(UNIQUE_PATH, assert_file_name)
+        qingstor_file_bin = QingStorFile(REMOTE_PATH, self.storage, mode='rb')
 
-            test_file = six.BytesIO()
-            test_file.write('Hello,QingStor!')
-            test_file.seek(0)
-            self.storage.save(REMOTE_PATH, test_file)
-            test_file.close()
+        assert qingstor_file_bin._is_read is False
 
-            qingstor_file_bin = QingStorFile(REMOTE_PATH, self.storage, mode='rb')
+        assert qingstor_file_bin._is_dirty is False
 
-            assert qingstor_file_bin._is_read is False
+        qingstor_file_bin.close()
 
-            assert qingstor_file_bin._is_dirty is False
+        qingstor_file = QingStorFile(REMOTE_PATH, self.storage, mode='r')
 
-            qingstor_file_bin.close()
+        self.storage._read = mock.Mock(return_value='Hello,QingStor!')
+        content = qingstor_file.read()
 
-            qingstor_file = QingStorFile(REMOTE_PATH, self.storage, mode='r')
+        assert content.startswith('Hello')
 
-            self.storage._read = mock.Mock(return_value='Hello,QingStor!')
-            content = qingstor_file.read()
-
-            assert content.startswith('Hello')
-
-            qingstor_file.file.close()
+        qingstor_file.file.close()
 
     def test_dirty_file(self):
         ASSET_FILE_NAME = '测试脏文件.txt'
