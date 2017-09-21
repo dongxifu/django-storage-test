@@ -9,7 +9,9 @@ from datetime import datetime
 from os.path import join
 
 import pytest
-import six
+
+from django.utils import six
+from django.utils.encoding import force_bytes
 
 from storages.backends.qingstor import QingStorFile, QingStorStorage
 
@@ -51,7 +53,7 @@ class QingStorageTest(unittest.TestCase):
             content = 'Hello,QingStor!'
 
             dummy_file = six.BytesIO()
-            dummy_file.write(content)
+            dummy_file.write(force_bytes(content))
             dummy_file.seek(0, os.SEEK_END)
             file_size = dummy_file.tell()
 

@@ -5,11 +5,11 @@ import os
 import posixpath
 from datetime import datetime
 
-from django.utils import six
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured, SuspiciousOperation
 from django.core.files.base import File
 from django.core.files.storage import Storage
+from django.utils import six
 from django.utils.encoding import filepath_to_uri, force_bytes, force_text
 from six.moves.urllib_parse import urljoin
 
@@ -45,7 +45,7 @@ class QingStorFile(File):
     def read(self, num_bytes=None):
         if not self._is_read:
             content = self._storage._read(self._name)
-            self.file = six.BytesIO(content)
+            self.file = six.BytesIO(force_bytes(content))
             self._is_read = True
 
         if num_bytes is None:
