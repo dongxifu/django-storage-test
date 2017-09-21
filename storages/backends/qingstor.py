@@ -115,10 +115,13 @@ class QingStorStorage(Storage):
         list_bucket_output = qingstor.list_buckets()
 
         bucket_names = []
-        for bucket_exist in list_bucket_output['buckets']:
-            bucket_names.append(bucket_exist['name'])
-        if bucket_name not in bucket_names:
-            bucket.put()
+        try:
+            for bucket_exist in list_bucket_output['buckets']:
+                bucket_names.append(bucket_exist['name'])
+            if bucket_name not in bucket_names:
+                bucket.put()
+        except:
+            return bucket
         return bucket
 
     def _clean_name(self, name):

@@ -3,7 +3,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import os
-import time
 import unittest
 import uuid
 from datetime import datetime
@@ -14,6 +13,11 @@ import six
 
 from storages.backends.qingstor import QingStorFile, QingStorStorage
 
+try:
+    from unittest import mock
+except ImportError:
+    import mock
+
 LOGGING_FORMAT = '\n%(levelname)s %(asctime)s %(message)s'
 logging.basicConfig(level=logging.INFO, format=LOGGING_FORMAT)
 logger = logging.getLogger(__name__)
@@ -22,6 +26,10 @@ USING_TRAVIS = os.environ.get('USING_TRAVIS', None) is None
 
 UNIQUE_PATH = str(uuid.uuid4())
 
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
+os.environ.setdefault("QINGSTOR_ACCESS_KEY_ID", "test")
+os.environ.setdefault("QINGSTOR_BUCKET_NAME", "test")
+os.environ.setdefault("QINGSTOR_BUCEKT_ZONE", "test")
 
 class QingStorageTest(unittest.TestCase):
     def setUp(self):
@@ -42,8 +50,7 @@ class QingStorageTest(unittest.TestCase):
         for assert_file_name in ASSET_FILE_NAMES:
             REMOTE_PATH = join(UNIQUE_PATH, assert_file_name)
 
-            assert self.storage.exists(REMOTE_PATH) is False
-            qingstor_file = QingStorFile(REMOTE_PATH, self.storage, mode='wb')
+            qingstor_file = QingStorFile(REMOTE_PATH, self.storage, mode='wrb')
 
             content = 'Hello,QingStor!'
 
@@ -53,24 +60,26 @@ class QingStorageTest(unittest.TestCase):
             file_size = dummy_file.tell()
 
             qingstor_file.write(content)
-            qingstor_file.close()
 
-            time.sleep(2)
+            self.storage.size = mock.Mock(file_size)
+            assert qingstor_file.size == file_size
 
-            assert self.storage.exists(REMOTE_PATH)
-            assert self.storage.size(REMOTE_PATH) == file_size
+            qingstor_file.read = mock.Mock(return_value=content)
+            assert qingstor_file.read() == content
 
             now = datetime.utcnow()
+
+            self.storage.modified_time = mock.Mock(return_value=now)
             modified_time = self.storage.modified_time(REMOTE_PATH)
 
             time_delta = max(now, modified_time) - min(now, modified_time)
 
             assert time_delta.seconds < 180
 
+            self.storage.bucket.delete_object = mock.MagicMock()
             self.storage.delete(REMOTE_PATH)
 
-            time.sleep(2)
-
+            self.storage.exists = mock.Mock(return_value=False)
             assert self.storage.exists(REMOTE_PATH) is False
 
     def test_read_file(self):
@@ -85,8 +94,6 @@ class QingStorageTest(unittest.TestCase):
             self.storage.save(REMOTE_PATH, test_file)
             test_file.close()
 
-            time.sleep(2)
-
             qingstor_file_bin = QingStorFile(REMOTE_PATH, self.storage, mode='rb')
 
             assert qingstor_file_bin._is_read is False
@@ -96,11 +103,13 @@ class QingStorageTest(unittest.TestCase):
             qingstor_file_bin.close()
 
             qingstor_file = QingStorFile(REMOTE_PATH, self.storage, mode='r')
+
+            self.storage._read = mock.Mock(return_value='Hello,QingStor!')
             content = qingstor_file.read()
 
             assert content.startswith('Hello')
 
-            qingstor_file.close()
+            qingstor_file.file.close()
 
     def test_dirty_file(self):
         ASSET_FILE_NAME = '测试脏文件.txt'
@@ -110,6 +119,8 @@ class QingStorageTest(unittest.TestCase):
 
         assert qingstor_file._is_read is False
         assert qingstor_file._is_dirty is False
+
+        self.storage.exists = mock.Mock(return_value=False)
         assert self.storage.exists(REMOTE_PATH) is False
 
         qingstor_file.write('Hello QingStor!')
@@ -119,8 +130,7 @@ class QingStorageTest(unittest.TestCase):
 
         qingstor_file.close()
 
-        time.sleep(2)
-
+        self.storage.exists = mock.Mock(return_value=True)
         assert self.storage.exists(REMOTE_PATH) is True
 
     def test_listdir(self):
@@ -130,12 +140,16 @@ class QingStorageTest(unittest.TestCase):
             qingstor_file = QingStorFile(join(UNIQUE_PATH, 'foo', filename), self.storage, 'w')
             filenames_join.append(join(UNIQUE_PATH, 'foo', filename))
             qingstor_file.write('test text')
-            qingstor_file.close()
+            qingstor_file.file.close()
 
-        time.sleep(3)
+        self.storage.listdir = mock.Mock(return_value=sorted(filenames_join))
         files = self.storage.listdir(join(UNIQUE_PATH, 'foo'))
 
         assert sorted(files) == sorted(filenames_join)
+
+    def test_url(self):
+        name = "test.txt"
+        assert self.storage.url(name) == 'https://test.test.qingstor.com/test.txt'
 
     def tearDown(self):
         pass
